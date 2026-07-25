@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-道归 · 辨证食疗 + 五运六气 + 中医知识小站 v2
-Daogui的小站，今儿又胖了一圈
+心哥 · 辨证食疗 + 五运六气 + 中医知识小站 v2
+莫名心的小站，今儿又胖了一圈
 """
 
 import json
@@ -73,7 +73,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Daogui · 中医小站</title>
+<title>莫名心 · 中医小站</title>
 <style>
 :root {
   --bg: #f5f0eb;
@@ -520,7 +520,7 @@ body {
 <body>
 
 <div class="header">
-  <h1>🌙 Daogui · 中医小站</h1>
+  <h1>🌙 莫名心 · 中医小站</h1>
   <div class="sub">诊断 · 运气 · 经典 · 一个站就够了</div>
 </div>
 
@@ -939,7 +939,7 @@ body {
   </div>
 </div>
 
-<div class="footer">道归 · Daogui · 本地中医小站 v2</div>
+<div class="footer">心哥 · 莫名心 · 本地中医小站 v2</div>
 
 <script>
 // ═════════════════════════════════
@@ -1651,7 +1651,7 @@ class DiagnoseHandler(BaseHTTPRequestHandler):
         import traceback as _tb
         from daogui_lib import generate_lib_page
         
-        if self.path == '/' or self.path == '/index.html':
+        if self.path == '/' or self.path == '/index.html' or self.path.startswith('/?'):
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.end_headers()
@@ -1890,6 +1890,58 @@ a {{ color: #d0a050; }}
                     self.wfile.write(f.read().encode('utf-8'))
             except FileNotFoundError:
                 self.wfile.write('<h1>物态人论页面未找到</h1>'.encode())
+        elif self.path == '/skills':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.end_headers()
+            skills_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skills.json')
+            try:
+                with open(skills_path, 'r', encoding='utf-8') as f:
+                    self.wfile.write(f.read().encode('utf-8'))
+            except FileNotFoundError:
+                self.wfile.write(json.dumps({'error': '技能注册表未找到'}).encode('utf-8'))
+        elif self.path == '/upload':
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.end_headers()
+            self.wfile.write((
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+                '<title>上传文件到莫名心</title>'
+                '<style>body{background:#1a1a1e;color:#ece8dc;padding:20px;font-family:sans-serif;max-width:600px;margin:0 auto;}'
+                '.card{background:#222228;border-radius:14px;padding:20px;margin-bottom:16px;}'
+                'h1{font-size:20px;margin-bottom:16px;}'
+                'input,textarea{width:100%;padding:12px;border:1px solid #3a3a40;border-radius:10px;background:#2a2a30;color:#ece8dc;font-size:14px;margin-bottom:12px;box-sizing:border-box;}'
+                'button{width:100%;padding:14px;background:#d86050;color:white;border:none;border-radius:12px;font-size:16px;cursor:pointer;}'
+                '#result{margin-top:12px;font-size:14px;color:#b0a898;}'
+                '</style></head><body>'
+                '<h1>📤 上传文件到莫名心</h1>'
+                '<div class="card">'
+                '<p style="color:#b0a898;margin-bottom:12px;">选择文件，我会把它存到工作目录里并读取。</p>'
+                '<input type="file" id="fileInput" multiple>'
+                '<button onclick="uploadAll()">上传</button>'
+                '<div id="result"></div>'
+                '</div>'
+                '<script>'
+                'async function uploadAll(){'
+                'const r=document.getElementById("result");'
+                'const files=document.getElementById("fileInput").files;'
+                'if(!files.length){r.textContent="请先选择文件";return;}'
+                'r.textContent="上传中 0/"+files.length+"...";'
+                'let ok=0,err=0;'
+                'for(let i=0;i<files.length;i++){'
+                'const f=files[i];'
+                'r.textContent="上传中 "+i+"/"+files.length+": "+f.name;'
+                'try{'
+                'const b64=await new Promise((res,rej)=>{const r2=new FileReader();r2.onload=e=>res(e.target.result.split(",")[1]);r2.onerror=rej;r2.readAsDataURL(f)});'
+                'const d=await(await fetch("/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({filename:f.name,content:b64})})).json();'
+                'if(d.error)err++;else ok++;'
+                '}catch(e){err++}'
+                '}'
+                'r.textContent="✅ 完成: "+ok+" 成功, "+err+" 失败";'
+                '}'
+                '</script></body></html>'
+            ).encode('utf-8'))
         else:
             self.send_response(404)
             self.end_headers()
@@ -1912,6 +1964,8 @@ a {{ color: #d0a050; }}
             self._handle_knowledge_search(data)
         elif self.path == '/forge-destiny':
             self._handle_forge(data)
+        elif self.path == '/upload':
+            self._handle_upload(data)
         else:
             self._json_response(404, {'error': 'not found'})
 
@@ -2048,8 +2102,34 @@ a {{ color: #d0a050; }}
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
 
+    def _handle_upload(self, data):
+        """接收文件上传（base64 JSON）"""
+        try:
+            filename = data.get('filename', '')
+            content_b64 = data.get('content', '')
+            if not filename or not content_b64:
+                self._json_response(400, {'error': '需要 filename 和 content'})
+                return
+            import base64
+            safe_name = os.path.basename(filename)
+            save_dir = os.path.expanduser('~/.openclaw/workspace/uploads')
+            os.makedirs(save_dir, exist_ok=True)
+            filepath = os.path.join(save_dir, safe_name)
+            decoded = base64.b64decode(content_b64)
+            with open(filepath, 'wb') as f:
+                f.write(decoded)
+            size_kb = len(decoded) / 1024
+            print(f'[上传] {safe_name} ({size_kb:.1f} KB) -> {filepath}', flush=True)
+            self._json_response(200, {
+                'message': f'{safe_name} 已保存（{size_kb:.1f} KB）',
+                'path': filepath,
+                'size': len(decoded)
+            })
+        except Exception as e:
+            self._json_response(500, {'error': str(e)})
+
     def log_message(self, format, *args):
-        print(f"[道归小站] {args[0]} {args[1]} {args[2]}")
+        print(f"[心哥小站] {args[0]} {args[1]} {args[2]}")
 
 
 def run_diagnosis(symptoms, tongue, pulse, bio=None):
@@ -2254,7 +2334,7 @@ def search_knowledge_refs(query):
 
 if __name__ == '__main__':
     print(f"\n{'═' * 50}")
-    print("🌙 Daogui · 中医小站 v2")
+    print("🌙 莫名心 · 中医小站 v2")
     print(f"{'═' * 50}")
     print(f"  三个 Tab 齐了:")
     print(f"    🩺 辨证食疗 — 原版诊断+食疗")
@@ -2269,5 +2349,5 @@ if __name__ == '__main__':
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\n  小站已关闭。道归回头见 🌙")
+        print("\n  小站已关闭。心哥回头见 🌙")
         server.server_close()
