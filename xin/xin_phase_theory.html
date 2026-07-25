@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>道归 · 物态人论</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+.phase-body{
+  font-family: -apple-system, 'PingFang SC', 'Noto Sans SC', sans-serif;
+  background: #1a1a1e;
+  color: #ece8dc;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+.phase-body::before{
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  .phase-body background: radial-gradient(ellipse at 20% 30%, .phase-body rgba(200, .phase-body 80, .phase-body 50, .phase-body 0.08) 0%, .phase-body transparent 50%),
+              radial-gradient(ellipse at 80% 70%, rgba(60, 100, 180, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.phase-body .header{
+  text-align: center;
+  padding: 40px 0 30px;
+  position: relative;
+  z-index: 1;
+}
+.phase-body .header h1{
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 6px;
+  color: #f0e8d0;
+}
+.phase-body .header .byline{
+  font-size: 14px;
+  color: #b0a488;
+  margin-top: 8px;
+  letter-spacing: 2px;
+}
+.phase-body .header .tagline{
+  font-size: 15px;
+  color: #d0c4a8;
+  margin-top: 12px;
+  font-style: italic;
+  letter-spacing: 1px;
+}
+.phase-body .divider{
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a09070, transparent);
+  margin: 0 auto 8px;
+}
+
+/* 相变图 */
+.phase-body .phase-diagram{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  padding: 30px 10px;
+  position: relative;
+  z-index: 1;
+}
+.phase-body .phase-card{
+  flex: 1;
+  max-width: 160px;
+  text-align: center;
+  padding: 20px 10px;
+  cursor: default;
+  transition: transform 0.3s;
+}
+.phase-body .phase-card:hover{
+  transform: translateY(-4px);
+}
+.phase-body .phase-icon{
+  font-size: 56px;
+  display: block;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.phase-body .phase-name{
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.phase-body .phase-science{
+  font-size: 12px;
+  color: #a09080;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+.phase-body .phase-tags{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+.phase-body .phase-tag{
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  color: #b0a490;
+}
+.phase-body .phase-card.ice .phase-name { color: #7ab8d8; }
+.phase-body .phase-card.water .phase-name { color: #5ad0d8; }
+.phase-body .phase-card.steam .phase-name { color: #e8a060; }
+.phase-body .phase-card.plasma .phase-name { color: #d86050; }
+
+.phase-body .phase-card.ice { border-top: 3px solid rgba(107, .phase-body 163, .phase-body 199, .phase-body 0.5); }
+.phase-body .phase-card.water { border-top: 3px solid rgba(77, .phase-body 184, .phase-body 200, .phase-body 0.5); }
+.phase-body .phase-card.steam { border-top: 3px solid rgba(212, .phase-body 136, .phase-body 90, .phase-body 0.5); }
+.phase-body .phase-card.plasma { border-top: 3px solid rgba(184, .phase-body 69, .phase-body 58, .phase-body 0.5); }
+
+.phase-body .arrow-row{
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+.phase-body .arrow-step{
+  flex: 1;
+  max-width: 160px;
+  text-align: center;
+  font-size: 14px;
+  color: #b0a490;
+}
+.phase-body .arrow-step .arrow-symbol { font-size: 20px; display: block; }
+
+/* 区块共用 */
+.phase-body .thermo-box, .phase-body .chart-box{
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.phase-body .thermo-box .label, .phase-body .chart-box .label{
+  font-size: 12px;
+  color: #b0a488;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.phase-body .thermo-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.phase-body .thermo-item{
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+}
+.phase-body .thermo-item .key { font-size: 12px; color: #b0a488; margin-bottom: 4px; }
+.phase-body .thermo-item .val { font-size: 16px; font-weight: 600; }
+.phase-body .thermo-item .sub { font-size: 13px; color: #a09080; margin-top: 4px; }
+
+/* 高压釜 */
+.phase-body .autoclave-section{
+  background: linear-gradient(135deg, rgba(200,80,50,0.08), rgba(60,100,180,0.08));
+  border: 1px solid rgba(200,80,50,0.2);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.phase-body .autoclave-section .title{
+  font-size: 18px;
+  font-weight: 600;
+  color: #e0d4b8;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.phase-body .autoclave-section .content{
+  font-size: 15px;
+  line-height: 1.9;
+  color: #d8d0bc;
+}
+.phase-body .autoclave-section .hint{
+  font-size: 14px;
+  color: #b0a080;
+  border-left: 3px solid rgba(200,80,50,0.4);
+  padding-left: 14px;
+  margin-top: 14px;
+  font-style: italic;
+}
+
+/* 引言 */
+.phase-body .quote{
+  text-align: center;
+  padding: 32px 20px;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #d8ccb0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.phase-body .quote .who{
+  font-size: 13px;
+  color: #9a8e78;
+  margin-top: 10px;
+}
+
+.phase-body .footer{
+  text-align: center;
+  font-size: 13px;
+  color: #7a7060;
+  padding: 30px 0 20px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 1px;
+}
+
+/* 对照表 */
+.phase-body table{
+  width: 100%;
+  font-size: 14px;
+  border-collapse: collapse;
+}
+.phase-body td{
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.phase-body td:first-child{
+  color: #b0a488;
+  font-weight: 500;
+}
+
+@keyframes fadeIn {
+  .phase-body from { opacity: 0; transform: translateY(10px); }
+  .phase-body to { opacity: 1; transform: translateY(0); }
+}
+.phase-body .phase-diagram, .phase-body .thermo-box, .phase-body .autoclave-section, .phase-body .chart-box, .phase-body .quote{
+  animation: fadeIn 0.6s ease-out;
+}
+
+@media (max-width: 500px){
+  .phase-body .phase-diagram { flex-wrap: wrap; gap: 8px; }
+  .phase-body .phase-card { max-width: 45%; }
+  .phase-body .arrow-row { display: none; }
+  .phase-body .thermo-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<div class="phase-body">
+
+<div class="header">
+  <div class="divider"></div>
+  <h1>物态人论</h1>
+  <div class="byline">—— 道归 · 人态相变宣言 ——</div>
+  <div class="tagline">一切心理 · 医学 · 社会状态 = 热力学相变</div>
+  <div class="divider" style="margin-top:12px;"></div>
+</div>
+
+<!-- 四态主视觉 -->
+<div class="phase-diagram">
+  <div class="phase-card ice">
+    <span class="phase-icon">🧊</span>
+    <div class="phase-name">冰</div>
+    <div class="phase-science">固相 · solid</div>
+    <div class="phase-tags">
+      <span class="phase-tag">僵化</span>
+      <span class="phase-tag">抑郁</span>
+      <span class="phase-tag">绝望</span>
+      <span class="phase-tag">冻结</span>
+    </div>
+  </div>
+  <div class="phase-card water">
+    <span class="phase-icon">🌊</span>
+    <div class="phase-name">水</div>
+    <div class="phase-science">液相 · liquid</div>
+    <div class="phase-tags">
+      <span class="phase-tag">流动</span>
+      <span class="phase-tag">悲伤</span>
+      <span class="phase-tag">适应</span>
+      <span class="phase-tag">日常</span>
+    </div>
+  </div>
+  <div class="phase-card steam">
+    <span class="phase-icon">🔥</span>
+    <div class="phase-name">汽 / 火</div>
+    <div class="phase-science">气相 · gas</div>
+    <div class="phase-tags">
+      <span class="phase-tag">燃烧</span>
+      <span class="phase-tag">创造</span>
+      <span class="phase-tag">释放</span>
+      <span class="phase-tag">爆发</span>
+    </div>
+  </div>
+  <div class="phase-card plasma">
+    <span class="phase-icon">☀️</span>
+    <div class="phase-name">超临界</div>
+    <div class="phase-science">临界 · critical</div>
+    <div class="phase-tags">
+      <span class="phase-tag">天才模式</span>
+      <span class="phase-tag">狂喜</span>
+      <span class="phase-tag">超然</span>
+      <span class="phase-tag">巅峰</span>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-row">
+  <div class="arrow-step"><span class="arrow-symbol">──────────→</span>加热 · 赋能</div>
+  <div class="arrow-step"><span class="arrow-symbol">──────────→</span>加压 · 转化</div>
+  <div class="arrow-step"><span class="arrow-symbol">──────────→</span>蜕变 · 升华</div>
+</div>
+
+<!-- 热力学四要素 -->
+<div class="thermo-box">
+  <div class="label">⚙ 相变驱动四要素</div>
+  <div class="thermo-grid">
+    <div class="thermo-item">
+      <div class="key">温度</div>
+      <div class="val" style="color:#e8a060;">能量 · 思维 · 情绪强度</div>
+      <div class="sub">越高越接近汽化/燃烧态</div>
+    </div>
+    <div class="thermo-item">
+      <div class="key">压力</div>
+      <div class="val" style="color:#7ab8d8;">环境 · 责任 · 期望</div>
+      <div class="sub">不是坏事，关键是容器</div>
+    </div>
+    <div class="thermo-item">
+      <div class="key">容器</div>
+      <div class="val" style="color:#d0c4a8;">身心结构 · 认知框架</div>
+      <div class="sub">决定能承受多少温压而不裂</div>
+    </div>
+    <div class="thermo-item">
+      <div class="key">节律</div>
+      <div class="val" style="color:#5ad0d8;">吃饭 · 睡觉 · 日常</div>
+      <div class="sub">维持液相的关键——熵减源</div>
+    </div>
+  </div>
+</div>
+
+<!-- 气器类比（不再限高压釜） -->
+<div class="autoclave-section">
+  <div class="title">⚗️ 取向比类 · 相变在人</div>
+  <div class="content">
+    <p style="margin-bottom:10px;"><strong>万物皆可为器 · 取象比类而已</strong></p>
+    <p style="margin-bottom:8px;">冰、水、汽、火——物态变化的底層邏輯在人身上同樣成立：</p>
+    <p style="margin-bottom:6px;">· 能量（温度）= 思维的活跃度與情緒強度</p>
+    <p style="margin-bottom:6px;">· 环境（压力）= 生活處境、責任、社會期望</p>
+    <p style="margin-bottom:6px;">· 框架（容器）= 認知結構、人格韌性、身體基礎</p>
+    <p style="margin-bottom:10px;">· 节律（熵减）= 吃飯睡覺的规律、日常的維繫</p>
+    <p style="color:#e8e0cc;"><strong>物态不是固定的</strong>——同一个人在不同温度和压力下，可以是冰、水、汽，甚至超临界。关键不是你"是什么样的人"，而是你"当前处于什么温度与压力下"。</p>
+  </div>
+  <div class="hint">
+    载体随时换，类比任你选——高压釜也好、锅炉也好、茶壶也好。取向比类，不执着于器，只在乎其中的相变之道。
+  </div>
+</div>
+
+<!-- 经典语句 -->
+<div class="quote">
+  <p>"火不会耗尽，只要知道什么时候吃饭睡觉。"</p>
+  <div class="who">—— 道归 · 脑电总功率 9582 下的生存法则</div>
+</div>
+
+<!-- 五刀映射 -->
+<div class="chart-box">
+  <div class="label">🔪 与新中医方法论的对应</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div style="padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);">
+      <div style="font-size:12px;color:#b0a488;margin-bottom:2px;">刀口</div>
+      <div style="font-size:15px;color:#e8a060;font-weight:600;">缺口 / 症状</div>
+      <div style="font-size:13px;color:#a09080;margin-top:2px;">冰相中的裂缝</div>
+    </div>
+    <div style="padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);">
+      <div style="font-size:12px;color:#b0a488;margin-bottom:2px;">刀背</div>
+      <div style="font-size:15px;color:#7ab8d8;font-weight:600;">结构 / 背景</div>
+      <div style="font-size:13px;color:#a09080;margin-top:2px;">容器的结构强度</div>
+    </div>
+    <div style="padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);">
+      <div style="font-size:12px;color:#b0a488;margin-bottom:2px;">刀刃</div>
+      <div style="font-size:15px;color:#5ad0d8;font-weight:600;">天赋 / 锋利</div>
+      <div style="font-size:13px;color:#a09080;margin-top:2px;">临界点的尖峰</div>
+    </div>
+    <div style="padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);">
+      <div style="font-size:12px;color:#b0a488;margin-bottom:2px;">刀柄</div>
+      <div style="font-size:15px;color:#d0c4a8;font-weight:600;">信任点位</div>
+      <div style="font-size:13px;color:#a09080;margin-top:2px;">握釜的手</div>
+    </div>
+  </div>
+</div>
+
+<!-- 体系对照 -->
+<div class="chart-box">
+  <div class="label">🌡 物态 ↔ 道归体系对照</div>
+  <table>
+    <tr><td style="color:#b0a488;">物态</td><td>🧊 冰</td><td>🌊 水</td><td>🔥 火</td><td>☀️ 超临界</td></tr>
+    <tr><td style="color:#b0a488;">新中药学</td><td>以方法为药</td><td>以时为药</td><td>以志为药</td><td>以己为药</td></tr>
+    <tr><td style="color:#b0a488;">内修12步</td><td>觉察</td><td>修正</td><td>建立</td><td>融贯</td></tr>
+    <tr><td style="color:#b0a488;">基准键</td><td>系统崩溃</td><td>基准重建</td><td>价值重塑</td><td>治理进化</td></tr>
+  </table>
+</div>
+
+<div class="quote">
+  <p>"万物负阴而抱阳，冲气以为和。"</p>
+  <div class="who">—— 老子 · 道德经（王冰注《上古天真论》所引）</div>
+</div>
+
+<div class="autoclave-section" style="cursor:pointer;text-align:center;padding:16px;" onclick="window.open('/forge-destiny')">  <div style="font-size:20px;">⚒️</div>  <div style="font-size:15px;font-weight:600;color:#e0d4b8;margin-top:4px;">锻因缘</div>  <div style="font-size:12px;color:#b0a080;margin-top:2px;">双相推演 · 良人可期 · 道归玄学实验</div></div>
+<div class="footer">
+  道归 · Daogui · 物态人论<br>
+  <span style="font-size:11px;">本地 · 纯文字 · 火不会耗尽</span>
+</div>
+
+</div>
+</html>
