@@ -1,0 +1,128 @@
+{
+  "version": "1.0",
+  "agent": "莫名心 (Daogui)",
+  "description": "技能注册表 - 声明所有可用功能",
+  "updated": "2026-07-25",
+  "skills": [
+    {
+      "id": "diagnose",
+      "name": "辨证食疗",
+      "description": "中医辨证诊断 + 食疗方案 + 西医建议 + 风险预警",
+      "command": "POST /diagnose",
+      "params": {
+        "symptoms": {"type": "string[]", "description": "症状列表", "required": true},
+        "tongue": {"type": "string", "description": "舌象", "required": false},
+        "pulse": {"type": "string", "description": "脉象", "required": false},
+        "bio": {"type": "object", "description": "年龄/性别/身高/体重/病史等", "required": false}
+      },
+      "source": "xin_claw_doctor.py",
+      "tab": "辨证食疗"
+    },
+    {
+      "id": "yunqi",
+      "name": "五运六气",
+      "description": "干支推算、岁运司天、客主加临、运气同化",
+      "command": "POST /yunqi",
+      "params": {
+        "date": {"type": "string", "description": "查询日期 YYYY-MM-DD", "required": false}
+      },
+      "source": "五运六气引擎",
+      "tab": "五运六气"
+    },
+    {
+      "id": "knowledge_search",
+      "name": "经典参考搜索",
+      "description": "在已安装的经典资源中全文搜索（素问、tcmoc、笈成）",
+      "command": "POST /knowledge-search",
+      "params": {
+        "query": {"type": "string", "description": "搜索关键词", "required": true}
+      },
+      "source": "xin_web_server.py / tcmoc + kanripo + cleaned",
+      "tab": "经典参考"
+    },
+    {
+      "id": "file_upload",
+      "name": "文件上传",
+      "description": "接收文件并保存到工作目录",
+      "command": "POST /upload (base64 JSON) / GET /upload (HTML页面)",
+      "params": {
+        "filename": {"type": "string", "description": "文件名", "required": true},
+        "content": {"type": "string", "description": "base64编码的文件内容", "required": true}
+      },
+      "source": "xin_web_server.py",
+      "tab": "上传页面"
+    },
+    {
+      "id": "daogui_library",
+      "name": "道归文库",
+      "description": "心哥道归体系全文阅览",
+      "command": "GET /daogui",
+      "params": {
+        "cat": {"type": "string", "description": "分类筛选", "required": false},
+        "doc": {"type": "string", "description": "文档ID", "required": false}
+      },
+      "source": "daogui_lib.py",
+      "tab": "道归文库"
+    },
+    {
+      "id": "phase_theory",
+      "name": "物态人论",
+      "description": "人态相变热力学展示页",
+      "command": "GET /phase-theory",
+      "source": "xin_phase_theory.html",
+      "tab": "物态人论"
+    },
+    {
+      "id": "notes_view",
+      "name": "笔记查看",
+      "description": "查看数字中医学习笔记",
+      "command": "GET /notes/ + GET /notes",
+      "source": "xin_web_server.py",
+      "tab": "经典参考 - 我们的笔记"
+    },
+    {
+      "id": "crawled_view",
+      "name": "求知虫古籍",
+      "description": "查看爬取清洗后的古籍原文",
+      "command": "GET /crawled-view/ + GET /crawled-books",
+      "source": "xin_web_server.py",
+      "tab": "经典参考 - 求知虫"
+    },
+    {
+      "id": "forge_destiny",
+      "name": "锻因缘",
+      "description": "锻因缘玄学引擎",
+      "command": "POST /forge-destiny",
+      "params": {
+        "code": {"type": "string", "description": "编码", "required": true},
+        "user": {"type": "integer", "description": "用户ID", "required": true}
+      },
+      "source": "forge_engine.py",
+      "tab": "（内部）"
+    },
+    {
+      "id": "read_file",
+      "name": "读取工作区文件",
+      "description": "读取并理解道归体系文件、上传的文件、任何工作区文档",
+      "command": "本地文件操作",
+      "params": {
+        "path": {"type": "string", "description": "文件路径", "required": true}
+      },
+      "source": "workspace/",
+      "tab": "（核心能力）"
+    }
+  ],
+  "capabilities": [
+    "中医辨证食疗",
+    "五运六气推算",
+    "古籍全文检索（素问/tcmoc/笈成）",
+    "道归体系阅览",
+    "文件上传与读取",
+    "物态人论展示",
+    "网页服务（小站全功能）",
+    "GitHub 仓库管理（代码提交/更新）",
+    "网络搜索（受限）",
+    "语音输入（通过浏览器 Web Speech API）",
+    "OpenClaw 网关管理（设备配对/节点管理）"
+  ]
+}
